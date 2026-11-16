@@ -142,7 +142,10 @@ if [[ -z "$(env_get APP_KEY)" ]]; then
     as_app "php artisan key:generate --force"
 fi
 # Not optimize:clear: on a fresh database the cache table does not exist yet.
+# Clear the route cache too: the build's Wayfinder step reads the routes, and
+# a cache left from the last deploy hides any routes added since.
 as_app "php artisan config:clear"
+as_app "php artisan route:clear"
 as_app "php artisan migrate --force"
 as_app "php artisan storage:link" || true
 as_app "npm ci --no-audit --no-fund"
