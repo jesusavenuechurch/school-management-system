@@ -1,0 +1,314 @@
+@import 'tailwindcss';
+
+@import 'tw-animate-css';
+
+@source '../views';
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+    --font-sans:
+        'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif,
+        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+        'Noto Color Emoji';
+    --font-display: 'Fraunces', ui-serif, Georgia, 'Times New Roman', serif;
+    --font-chalk: 'Caveat', 'Comic Sans MS', cursive;
+
+    --radius-lg: var(--radius);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-sm: calc(var(--radius) - 4px);
+
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+
+    /* Platform accents: playful colours for younger learners, used sparingly
+       next to the formal ink navy. */
+    --color-sun: var(--sun);
+    --color-sun-soft: var(--sun-soft);
+    --color-coral: var(--coral);
+    --color-coral-soft: var(--coral-soft);
+    --color-leaf: var(--leaf);
+    --color-leaf-soft: var(--leaf-soft);
+    --color-sky: var(--sky);
+    --color-sky-soft: var(--sky-soft);
+    --color-ink: var(--ink);
+    --color-board: var(--board);
+    --color-board-frame: var(--board-frame);
+    --color-chalk: var(--chalk);
+    --color-chalk-yellow: var(--chalk-yellow);
+    --color-paper: var(--paper);
+
+    --color-chart-1: var(--chart-1);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
+
+    --color-sidebar: var(--sidebar);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-ring: var(--sidebar-ring);
+}
+
+/*
+ * Platform theme: "friendly but formal".
+ * Ink navy and warm paper carry the formal side (secondary school, office
+ * work); sun, coral, leaf and sky bring in the younger classes.
+ */
+:root {
+    --ink: oklch(0.3 0.07 262);
+    --paper: oklch(0.986 0.007 85);
+
+    --background: var(--paper);
+    --foreground: oklch(0.25 0.04 262);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.25 0.04 262);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.25 0.04 262);
+    --primary: oklch(0.36 0.09 262);
+    --primary-foreground: oklch(0.985 0.01 85);
+    --secondary: oklch(0.958 0.018 85);
+    --secondary-foreground: oklch(0.28 0.05 262);
+    --muted: oklch(0.958 0.012 85);
+    --muted-foreground: oklch(0.5 0.03 262);
+    --accent: oklch(0.95 0.035 85);
+    --accent-foreground: oklch(0.28 0.05 262);
+    --destructive: oklch(0.577 0.2 27);
+    --destructive-foreground: oklch(0.577 0.2 27);
+    --border: oklch(0.9 0.016 85);
+    --input: oklch(0.88 0.018 85);
+    --ring: oklch(0.6 0.12 262);
+
+    --sun: oklch(0.84 0.15 82);
+    --sun-soft: oklch(0.955 0.055 88);
+    --coral: oklch(0.69 0.15 35);
+    --coral-soft: oklch(0.945 0.035 35);
+    --leaf: oklch(0.64 0.12 155);
+    --leaf-soft: oklch(0.948 0.035 155);
+    --sky: oklch(0.7 0.1 238);
+    --sky-soft: oklch(0.948 0.025 238);
+
+    /* The chalkboard: our signature object. */
+    --board: oklch(0.36 0.045 160);
+    --board-frame: oklch(0.55 0.08 60);
+    --chalk: oklch(0.96 0.01 95);
+    --chalk-yellow: oklch(0.88 0.12 90);
+
+    --chart-1: var(--primary);
+    --chart-2: var(--sun);
+    --chart-3: var(--leaf);
+    --chart-4: var(--coral);
+    --chart-5: var(--sky);
+    --radius: 0.75rem;
+    --sidebar: oklch(0.97 0.012 85);
+    --sidebar-foreground: oklch(0.25 0.04 262);
+    --sidebar-primary: oklch(0.36 0.09 262);
+    --sidebar-primary-foreground: oklch(0.985 0.01 85);
+    --sidebar-accent: oklch(0.935 0.03 85);
+    --sidebar-accent-foreground: oklch(0.25 0.04 262);
+    --sidebar-border: oklch(0.9 0.016 85);
+    --sidebar-ring: oklch(0.6 0.12 262);
+}
+
+.dark {
+    --ink: oklch(0.86 0.04 262);
+    --paper: oklch(0.19 0.03 262);
+
+    --background: var(--paper);
+    --foreground: oklch(0.95 0.01 85);
+    --card: oklch(0.225 0.035 262);
+    --card-foreground: oklch(0.95 0.01 85);
+    --popover: oklch(0.225 0.035 262);
+    --popover-foreground: oklch(0.95 0.01 85);
+    --primary: oklch(0.82 0.08 262);
+    --primary-foreground: oklch(0.2 0.04 262);
+    --secondary: oklch(0.27 0.035 262);
+    --secondary-foreground: oklch(0.95 0.01 85);
+    --muted: oklch(0.27 0.03 262);
+    --muted-foreground: oklch(0.72 0.03 262);
+    --accent: oklch(0.29 0.04 262);
+    --accent-foreground: oklch(0.95 0.01 85);
+    --destructive: oklch(0.45 0.15 25);
+    --destructive-foreground: oklch(0.7 0.18 25);
+    --border: oklch(0.3 0.035 262);
+    --input: oklch(0.33 0.035 262);
+    --ring: oklch(0.6 0.1 262);
+
+    --sun: oklch(0.84 0.14 82);
+    --sun-soft: oklch(0.3 0.05 82);
+    --coral: oklch(0.72 0.14 35);
+    --coral-soft: oklch(0.3 0.05 35);
+    --leaf: oklch(0.7 0.12 155);
+    --leaf-soft: oklch(0.29 0.045 155);
+    --sky: oklch(0.74 0.1 238);
+    --sky-soft: oklch(0.29 0.045 238);
+
+    --board: oklch(0.32 0.04 160);
+    --board-frame: oklch(0.48 0.07 60);
+    --chalk: oklch(0.95 0.01 95);
+    --chalk-yellow: oklch(0.86 0.12 90);
+
+    --sidebar: oklch(0.21 0.032 262);
+    --sidebar-foreground: oklch(0.95 0.01 85);
+    --sidebar-primary: oklch(0.82 0.08 262);
+    --sidebar-primary-foreground: oklch(0.2 0.04 262);
+    --sidebar-accent: oklch(0.28 0.04 262);
+    --sidebar-accent-foreground: oklch(0.95 0.01 85);
+    --sidebar-border: oklch(0.3 0.035 262);
+    --sidebar-ring: oklch(0.6 0.1 262);
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+
+    body {
+        @apply bg-background text-foreground;
+    }
+
+    h1,
+    h2,
+    h3 {
+        font-optical-sizing: auto;
+    }
+}
+
+/* Faint exercise-book ruling, used behind hero and empty areas. */
+@utility bg-ruled {
+    background-image: linear-gradient(
+        to bottom,
+        color-mix(in oklch, var(--sky) 18%, transparent) 1px,
+        transparent 1px
+    );
+    background-size: 100% 2rem;
+}
+
+@utility bg-dotted {
+    background-image: radial-gradient(
+        color-mix(in oklch, var(--ink) 14%, transparent) 1px,
+        transparent 1px
+    );
+    background-size: 1.25rem 1.25rem;
+}
+
+/* Chalk strokes draw themselves in; static for people who prefer less motion. */
+@keyframes chalk-draw {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes chalk-dust {
+    0% {
+        opacity: 0.9;
+        transform: translate(0, 0) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(var(--dx, 6px), var(--dy, -10px)) scale(0.4);
+    }
+}
+
+.chalk-draw {
+    stroke-dasharray: 60;
+    stroke-dashoffset: 60;
+    animation: chalk-draw 0.7s ease-out forwards;
+    animation-delay: var(--delay, 0s);
+}
+
+.chalk-dust {
+    animation: chalk-dust 0.9s ease-out forwards;
+    animation-delay: var(--delay, 0s);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .chalk-draw {
+        animation: none;
+        stroke-dashoffset: 0;
+    }
+
+    .chalk-dust {
+        display: none;
+    }
+}
+
+/*
+ * Student ID cards. Always light, whatever the app theme, and printed
+ * with their colours (browsers drop backgrounds unless told otherwise).
+ */
+.id-card {
+    --idc-ink: oklch(0.3 0.07 262);
+    --idc-paper: oklch(0.99 0.006 85);
+    --idc-muted: oklch(0.52 0.03 262);
+    --idc-rule: oklch(0.7 0.1 238 / 0.18);
+    --idc-line: oklch(0.88 0.008 260);
+    --idc-sun: oklch(0.84 0.15 82);
+    --idc-coral: oklch(0.69 0.15 35);
+    --idc-leaf: oklch(0.64 0.12 155);
+    --idc-sky: oklch(0.7 0.1 238);
+    --idc-chalk-yellow: oklch(0.88 0.12 90);
+    color: var(--idc-ink);
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+
+@media screen {
+    .id-card-zoom {
+        zoom: 1.6;
+    }
+}
+
+@media print {
+    @page {
+        size: A4;
+        margin: 8mm;
+    }
+
+    html,
+    body {
+        background: white !important;
+    }
+
+    .no-print {
+        display: none !important;
+    }
+
+    .print-sheet {
+        break-after: page;
+    }
+
+    .print-sheet:last-child {
+        break-after: auto;
+    }
+}
