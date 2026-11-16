@@ -14,6 +14,7 @@ use App\Models\Student;
 use App\Models\Subject;
 use App\Models\Term;
 use App\Support\Constants;
+use App\Support\MarkingScales;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -194,6 +195,9 @@ class SetupJourneyController extends Controller
                     );
                 }
             }
+
+            // Each grade starts on the usual marking scale for its level.
+            MarkingScales::installPresets($school);
         });
 
         return $this->next('grades');

@@ -1,5 +1,9 @@
 <?php
 
+use App\Http\Controllers\Assessment\ExamController;
+use App\Http\Controllers\Assessment\MarkController;
+use App\Http\Controllers\Assessment\MarkingScaleController;
+use App\Http\Controllers\Assessment\ReportCardController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\OnboardingController;
@@ -13,6 +17,7 @@ use App\Http\Controllers\PublicSchoolController;
 use App\Http\Controllers\Setup\AcademicYearController;
 use App\Http\Controllers\Setup\ClassroomController;
 use App\Http\Controllers\Setup\ClassStructureController;
+use App\Http\Controllers\Setup\ClassSubjectController;
 use App\Http\Controllers\Setup\GradeLevelController;
 use App\Http\Controllers\Setup\SchoolPageController;
 use App\Http\Controllers\Setup\SetupJourneyController;
@@ -48,9 +53,36 @@ Route::middleware(['auth', 'school'])->group(function () {
     // the current school).
     Route::get('students/{student}/photo', [StudentController::class, 'photo'])->name('students.photo');
 
+    // Marks: teachers enter them for the subjects they teach.
+    Route::middleware('role:admin|teacher')->group(function () {
+        Route::get('marks', [MarkController::class, 'index'])->name('marks.index');
+        Route::get('marks/{exam}/{classroom}/{subject}', [MarkController::class, 'show'])->name('marks.show');
+        Route::put('marks/{exam}/{classroom}/{subject}', [MarkController::class, 'save'])->name('marks.save');
+
+        // Class teachers see their own class's reports and write remarks.
+        Route::get('reports', [ReportCardController::class, 'index'])->name('reports.index');
+        Route::get('reports/print', [ReportCardController::class, 'print'])->name('reports.print');
+        Route::put('reports/{term}/students/{student}/remarks', [ReportCardController::class, 'remarks'])->name('reports.remarks');
+    });
+
     // School setup and people management: administrators only.
     Route::middleware('role:admin')->group(function () {
         Route::put('school-page', [SchoolPageController::class, 'update'])->name('school-page.update');
+
+        Route::put('reports/{term}/{classroom}/publish', [ReportCardController::class, 'publish'])->name('reports.publish');
+        Route::put('reports/settings', [ReportCardController::class, 'settings'])->name('reports.settings');
+
+        Route::get('exams', [ExamController::class, 'index'])->name('exams.index');
+        Route::post('exams', [ExamController::class, 'store'])->name('exams.store');
+        Route::put('exams/{exam}', [ExamController::class, 'update'])->name('exams.update');
+        Route::delete('exams/{exam}', [ExamController::class, 'destroy'])->name('exams.destroy');
+
+        Route::get('marking-scales', [MarkingScaleController::class, 'index'])->name('scales.index');
+        Route::post('marking-scales', [MarkingScaleController::class, 'store'])->name('scales.store');
+        Route::post('marking-scales/presets', [MarkingScaleController::class, 'install'])->name('scales.install');
+        Route::put('marking-scales/{scale}', [MarkingScaleController::class, 'update'])->name('scales.update');
+        Route::put('marking-scales/{scale}/default', [MarkingScaleController::class, 'makeDefault'])->name('scales.makeDefault');
+        Route::delete('marking-scales/{scale}', [MarkingScaleController::class, 'destroy'])->name('scales.destroy');
 
         Route::prefix('setup')->name('setup.')->group(function () {
             // The guided setup journey with the chalkboard.
@@ -77,6 +109,7 @@ Route::middleware(['auth', 'school'])->group(function () {
             Route::post('classrooms', [ClassroomController::class, 'store'])->name('classrooms.store');
             Route::put('classrooms/{classroom}', [ClassroomController::class, 'update'])->name('classrooms.update');
             Route::delete('classrooms/{classroom}', [ClassroomController::class, 'destroy'])->name('classrooms.destroy');
+            Route::put('classrooms/{classroom}/subjects', [ClassSubjectController::class, 'update'])->name('classrooms.subjects');
 
             Route::get('subjects', [SubjectController::class, 'index'])->name('subjects.index');
             Route::post('subjects', [SubjectController::class, 'store'])->name('subjects.store');

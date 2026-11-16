@@ -29,6 +29,7 @@ class School extends Model
             'verified_at' => 'datetime',
             'published_at' => 'datetime',
             'setup_completed_at' => 'datetime',
+            'report_shows_position' => 'boolean',
         ];
     }
 

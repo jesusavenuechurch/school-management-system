@@ -267,7 +267,8 @@
  * Student ID cards. Always light, whatever the app theme, and printed
  * with their colours (browsers drop backgrounds unless told otherwise).
  */
-.id-card {
+.id-card,
+.paper-doc {
     --idc-ink: oklch(0.3 0.07 262);
     --idc-paper: oklch(0.99 0.006 85);
     --idc-muted: oklch(0.52 0.03 262);

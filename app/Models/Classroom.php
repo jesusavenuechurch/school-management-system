@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property-read int $students_count
+ * @property-read int $learners_count
  */
 class Classroom extends Model
 {
@@ -57,16 +58,19 @@ class Classroom extends Model
     }
 
     /**
-     * The grading scale for this class: one set for its grade level,
-     * otherwise the school's default.
+     * The marking scale for this class: its grade's scale, otherwise the
+     * school's default (or any scale, if none is marked default).
      */
     public function gradingScale(): ?GradingScale
     {
-        return GradingScale::query()
+        $scaleId = GradeLevel::withoutSchoolScope()->whereKey($this->grade_level_id)->value('grading_scale_id');
+
+        return GradingScale::withoutSchoolScope()
             ->where('school_id', $this->school_id)
-            ->where(fn ($q) => $q->where('grade_level_id', $this->grade_level_id)->orWhereNull('grade_level_id'))
-            ->orderByRaw('grade_level_id is null') // grade-specific first
+            ->when($scaleId, fn ($q) => $q->orderByRaw('id = ? desc', [$scaleId]))
             ->orderByDesc('is_default')
+            ->orderBy('id')
+            ->with('bands')
             ->first();
     }
 }

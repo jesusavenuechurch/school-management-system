@@ -1,5 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { Pencil, Plus, Users } from 'lucide-react';
+import { BookOpen, Pencil, Plus, Users } from 'lucide-react';
+import { useState } from 'react';
 import EmptyState from '@/components/empty-state';
 import Field from '@/components/field';
 import FormDialog, { DeleteButton } from '@/components/form-dialog';
@@ -12,6 +13,7 @@ import { classes as classesRoute } from '@/routes/setup';
 import {
     destroy as destroyClassroom,
     store as storeClassroom,
+    subjects as classroomSubjects,
     update as updateClassroom,
 } from '@/routes/setup/classrooms';
 import {
@@ -30,7 +32,9 @@ type Classroom = {
     class_teacher_id: number | null;
     class_teacher_name: string | null;
     students_count: number;
+    subjects: { subject_id: number; staff_id: number }[];
 };
+type Subject = { id: number; name: string; code: string };
 type Grade = {
     id: number;
     name: string;
@@ -43,6 +47,7 @@ type Props = {
     selectedYearId: number | null;
     gradeLevels: Grade[];
     teachers: Option[];
+    subjects: Subject[];
 };
 
 // Soft accents rotate per grade so younger and older years feel distinct.
@@ -53,6 +58,7 @@ export default function Classes({
     selectedYearId,
     gradeLevels,
     teachers,
+    subjects,
 }: Props) {
     const { errors } = usePage().props as { errors: Record<string, string> };
     const selectedYear = years.find((y) => y.id === selectedYearId);
@@ -351,6 +357,19 @@ export default function Classes({
                                                                 />
                                                             )}
                                                         </div>
+                                                        <div className="mt-2 border-t border-border pt-2">
+                                                            <ClassSubjectsDialog
+                                                                classroom={
+                                                                    classroom
+                                                                }
+                                                                subjects={
+                                                                    subjects
+                                                                }
+                                                                teachers={
+                                                                    teachers
+                                                                }
+                                                            />
+                                                        </div>
                                                     </li>
                                                 ),
                                             )}
@@ -381,6 +400,118 @@ export default function Classes({
                 )}
             </PageBody>
         </>
+    );
+}
+
+/**
+ * Which subjects the class takes and who teaches each. The subject teacher
+ * enters that subject's marks.
+ */
+function ClassSubjectsDialog({
+    classroom,
+    subjects,
+    teachers,
+}: {
+    classroom: Classroom;
+    subjects: Subject[];
+    teachers: Option[];
+}) {
+    const initial = () =>
+        Object.fromEntries(
+            subjects.map((subject) => [
+                subject.id,
+                String(
+                    classroom.subjects.find((a) => a.subject_id === subject.id)
+                        ?.staff_id ?? '',
+                ),
+            ]),
+        );
+    const [chosen, setChosen] = useState<Record<number, string>>(initial);
+    const taught = classroom.subjects.length;
+
+    return (
+        <FormDialog
+            wide
+            trigger={
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    className="-ml-2"
+                    onClick={() => setChosen(initial())}
+                >
+                    <BookOpen />
+                    {taught === 0
+                        ? 'Subjects'
+                        : `${taught} subject${taught === 1 ? '' : 's'}`}
+                </Button>
+            }
+            title={`Subjects in ${classroom.name}`}
+            description="Choose who teaches each subject. They enter its marks. Leave a subject on “Not taught” if this class doesn’t take it."
+            form={classroomSubjects.form(classroom.id)}
+        >
+            {() =>
+                subjects.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                        Add your subjects first, on the Subjects page.
+                    </p>
+                ) : (
+                    <>
+                        {classroom.class_teacher_id && (
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="justify-self-start"
+                                onClick={() =>
+                                    setChosen(
+                                        Object.fromEntries(
+                                            subjects.map((s) => [
+                                                s.id,
+                                                String(
+                                                    classroom.class_teacher_id,
+                                                ),
+                                            ]),
+                                        ),
+                                    )
+                                }
+                            >
+                                {classroom.class_teacher_name} teaches
+                                everything
+                            </Button>
+                        )}
+                        <div className="grid max-h-[55vh] gap-2 overflow-y-auto pr-1">
+                            {subjects.map((subject, i) => (
+                                <label
+                                    key={subject.id}
+                                    className="grid grid-cols-[1fr_minmax(10rem,14rem)] items-center gap-3 text-sm"
+                                >
+                                    <span className="font-medium">
+                                        {subject.name}
+                                    </span>
+                                    <input
+                                        type="hidden"
+                                        name={`subjects[${i}][subject_id]`}
+                                        value={subject.id}
+                                    />
+                                    <NativeSelect
+                                        name={`subjects[${i}][staff_id]`}
+                                        options={teachers}
+                                        placeholder="Not taught"
+                                        value={chosen[subject.id] ?? ''}
+                                        onChange={(e) =>
+                                            setChosen({
+                                                ...chosen,
+                                                [subject.id]: e.target.value,
+                                            })
+                                        }
+                                    />
+                                </label>
+                            ))}
+                        </div>
+                    </>
+                )
+            }
+        </FormDialog>
     );
 }
 

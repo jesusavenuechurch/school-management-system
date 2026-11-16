@@ -89,6 +89,36 @@ return [
         ],
     ],
 
+    // Starting marking scales: symbol => [from %, remark, counts as a pass].
+    // A band runs from its percentage up to the next band. Schools edit the
+    // cut-offs; LGCSE boundaries are set per exam, so these are only defaults.
+    'grading_scale_presets' => [
+        'primary' => [
+            'name' => 'Primary',
+            'bands' => [
+                'A' => [80, 'Excellent', true],
+                'B' => [70, 'Very good', true],
+                'C' => [55, 'Good', true],
+                'D' => [40, 'Fair', true],
+                'E' => [0, 'Needs improvement', false],
+            ],
+        ],
+        'high_school' => [
+            'name' => 'High school (LGCSE)',
+            'bands' => [
+                'A*' => [90, 'Distinction', true],
+                'A' => [80, 'Distinction', true],
+                'B' => [70, 'Good', true],
+                'C' => [60, 'Good', true],
+                'D' => [50, 'Satisfactory', true],
+                'E' => [40, 'Minimum pass', true],
+                'F' => [30, 'Minimum pass', true],
+                'G' => [20, 'Minimum pass', true],
+                'U' => [0, 'Ungraded', false],
+            ],
+        ],
+    ],
+
     'school_status' => [
         'active' => 'Active',
         'suspended' => 'Suspended',

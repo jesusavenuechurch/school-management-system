@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Concerns\BelongsToSchool;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class GradeLevel extends Model
@@ -21,10 +22,12 @@ class GradeLevel extends Model
     }
 
     /**
-     * @return HasMany<GradingScale, $this>
+     * The marking scale for this grade; none means the school's default.
+     *
+     * @return BelongsTo<GradingScale, $this>
      */
-    public function gradingScales(): HasMany
+    public function gradingScale(): BelongsTo
     {
-        return $this->hasMany(GradingScale::class);
+        return $this->belongsTo(GradingScale::class);
     }
 }

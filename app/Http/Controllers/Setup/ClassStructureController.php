@@ -8,6 +8,7 @@ use App\Models\AcademicYear;
 use App\Models\Classroom;
 use App\Models\GradeLevel;
 use App\Models\Staff;
+use App\Models\Subject;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -29,6 +30,7 @@ class ClassStructureController extends Controller
             ?? $years->first();
 
         return Inertia::render('setup/classes', [
+            'subjects' => Subject::query()->orderBy('name')->get(['id', 'name', 'code']),
             'years' => $years,
             'selectedYearId' => $year?->id,
             'gradeLevels' => GradeLevel::query()
@@ -36,7 +38,7 @@ class ClassStructureController extends Controller
                 ->orderBy('id')
                 ->with(['classrooms' => fn ($q) => $q
                     ->where('academic_year_id', $year?->id)
-                    ->with('classTeacher.user:id,name')
+                    ->with(['classTeacher.user:id,name', 'subjectTeachers:id,classroom_id,subject_id,staff_id'])
                     ->withCount(['enrollments as students_count' => fn ($e) => $e->whereNull('left_on')])
                     ->orderBy('name'),
                 ])
@@ -53,6 +55,10 @@ class ClassStructureController extends Controller
                         'class_teacher_id' => $class->class_teacher_id,
                         'class_teacher_name' => $class->classTeacher?->user?->name,
                         'students_count' => $class->students_count,
+                        'subjects' => $class->subjectTeachers->map(fn ($a) => [
+                            'subject_id' => $a->subject_id,
+                            'staff_id' => $a->staff_id,
+                        ])->values(),
                     ]),
                 ]),
             'teachers' => Staff::query()

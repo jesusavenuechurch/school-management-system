@@ -4,12 +4,13 @@ namespace App\Models;
 
 use App\Models\Concerns\BelongsToSchool;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * A school's own grading policy. Once results have been graded with a scale,
- * create a new scale for changes instead of editing its bands.
+ * A school's marking scale: the symbols (A, B... or A*, A... U) and the
+ * percentage each starts at. Grades point at the scale they use; the
+ * default scale covers every other grade. Results copy their symbol when
+ * marked, so editing a scale never changes marks already given.
  */
 class GradingScale extends Model
 {
@@ -25,11 +26,11 @@ class GradingScale extends Model
     }
 
     /**
-     * @return BelongsTo<GradeLevel, $this>
+     * @return HasMany<GradeLevel, $this>
      */
-    public function gradeLevel(): BelongsTo
+    public function gradeLevels(): HasMany
     {
-        return $this->belongsTo(GradeLevel::class);
+        return $this->hasMany(GradeLevel::class);
     }
 
     /**

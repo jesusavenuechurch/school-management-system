@@ -13,6 +13,7 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
+import { cn } from '@/lib/utils';
 
 type Errors = Record<string, string | undefined>;
 
@@ -42,7 +43,12 @@ export default function FormDialog({
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>{trigger}</DialogTrigger>
-            <DialogContent className={wide ? 'sm:max-w-2xl' : 'sm:max-w-lg'}>
+            <DialogContent
+                className={cn(
+                    'max-h-[calc(100dvh-2rem)] overflow-y-auto',
+                    wide ? 'sm:max-w-2xl' : 'sm:max-w-lg',
+                )}
+            >
                 <DialogHeader>
                     <DialogTitle className="font-display text-xl">
                         {title}

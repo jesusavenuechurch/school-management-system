@@ -1,7 +1,11 @@
 import { Link, usePage } from '@inertiajs/react';
 import {
+    Award,
     BookMarked,
     CalendarRange,
+    ClipboardList,
+    FileText,
+    PenLine,
     LayoutGrid,
     School,
     Sparkles,
@@ -21,6 +25,10 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import { index as examsIndex } from '@/routes/exams';
+import { index as marksIndex } from '@/routes/marks';
+import { index as reportsIndex } from '@/routes/reports';
+import { index as scalesIndex } from '@/routes/scales';
 import { classes, journey } from '@/routes/setup';
 import { index as subjectsIndex } from '@/routes/setup/subjects';
 import { index as yearsIndex } from '@/routes/setup/years';
@@ -31,6 +39,7 @@ import type { NavItem } from '@/types';
 export function AppSidebar() {
     const { auth, school } = usePage().props;
     const isAdmin = auth.roles.includes('admin');
+    const isTeacher = auth.roles.includes('teacher');
 
     const mainNavItems: NavItem[] = [
         { title: 'Dashboard', href: dashboard(), icon: LayoutGrid },
@@ -42,6 +51,16 @@ export function AppSidebar() {
                       icon: UsersRound,
                   },
                   { title: 'Staff', href: staffIndex(), icon: UserRoundCog },
+              ]
+            : []),
+        ...(isAdmin || isTeacher
+            ? [
+                  { title: 'Marks', href: marksIndex(), icon: PenLine },
+                  {
+                      title: 'Report cards',
+                      href: reportsIndex(),
+                      icon: FileText,
+                  },
               ]
             : []),
     ];
@@ -57,6 +76,8 @@ export function AppSidebar() {
         },
         { title: 'Grades & classes', href: classes(), icon: School },
         { title: 'Subjects', href: subjectsIndex(), icon: BookMarked },
+        { title: 'Tests & exams', href: examsIndex(), icon: ClipboardList },
+        { title: 'Marking scales', href: scalesIndex(), icon: Award },
     ];
 
     return (
