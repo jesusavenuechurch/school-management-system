@@ -1,6 +1,10 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
     ArrowRight,
+    Check,
+    Copy,
+    ExternalLink,
+    Globe,
     HeartHandshake,
     School,
     ShieldEllipsis,
@@ -16,7 +20,10 @@ import {
 } from '@/components/illustrations';
 import { PageBody } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
+import { useClipboard } from '@/hooks/use-clipboard';
+import { cn } from '@/lib/utils';
 import { dashboard } from '@/routes';
+import { update as updateSchoolPage } from '@/routes/school-page';
 import { journey } from '@/routes/setup';
 import { show as showStudent } from '@/routes/students';
 
@@ -32,6 +39,7 @@ type Props = {
     };
     setup?: { complete: boolean; steps: ChalkItem[] };
     verified?: boolean;
+    publicPage?: { url: string; published: boolean };
     myClasses?: {
         id: number;
         name: string;
@@ -84,6 +92,7 @@ export default function Dashboard({
     stats,
     setup,
     verified,
+    publicPage,
     myClasses,
     myChildren,
 }: Props) {
@@ -135,6 +144,15 @@ export default function Dashboard({
                             </div>
                         </div>
                     </section>
+                )}
+
+                {/* Admin: the school's public page */}
+                {isAdmin && publicPage && (
+                    <SchoolPageCard
+                        url={publicPage.url}
+                        published={publicPage.published}
+                        verified={verified === true}
+                    />
                 )}
 
                 {/* Admin: the setup chalkboard until setup is finished */}
@@ -265,3 +283,96 @@ export default function Dashboard({
 Dashboard.layout = {
     breadcrumbs: [{ title: 'Dashboard', href: dashboard() }],
 };
+
+function SchoolPageCard({
+    url,
+    published,
+    verified,
+}: {
+    url: string;
+    published: boolean;
+    verified: boolean;
+}) {
+    const [copiedText, copy] = useClipboard();
+    const display = url.replace(/^https?:\/\//, '');
+
+    return (
+        <section className="flex flex-col gap-4 rounded-2xl border border-border bg-card px-5 py-4 lg:flex-row lg:items-center">
+            <div className="flex min-w-0 flex-1 gap-3">
+                <span
+                    className={cn(
+                        'flex size-10 shrink-0 items-center justify-center rounded-xl',
+                        published ? 'bg-leaf-soft' : 'bg-muted',
+                    )}
+                >
+                    <Globe
+                        className={cn(
+                            'size-5',
+                            published ? 'text-leaf' : 'text-muted-foreground',
+                        )}
+                    />
+                </span>
+                <div className="min-w-0 text-sm">
+                    <p className="flex flex-wrap items-center gap-2 font-semibold">
+                        Your school page
+                        <span
+                            className={cn(
+                                'rounded-full px-2 py-0.5 text-xs font-medium',
+                                published
+                                    ? 'bg-leaf-soft text-foreground'
+                                    : 'bg-muted text-muted-foreground',
+                            )}
+                        >
+                            {published ? 'Live' : 'Not public yet'}
+                        </span>
+                    </p>
+                    <a
+                        href={url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="block truncate font-mono text-[13px] text-primary underline-offset-4 hover:underline"
+                    >
+                        {display}
+                    </a>
+                    <p className="mt-0.5 text-muted-foreground">
+                        {published
+                            ? 'Share it with parents: it shows your school and where to sign in.'
+                            : verified
+                              ? 'Hidden for now. Parents can still sign in there.'
+                              : 'Until your school is verified it shows only your name and the sign-in button.'}
+                    </p>
+                </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => void copy(url)}
+                >
+                    {copiedText === url ? <Check /> : <Copy />}
+                    {copiedText === url ? 'Copied' : 'Copy link'}
+                </Button>
+                <Button variant="outline" size="sm" asChild>
+                    <a href={url} target="_blank" rel="noreferrer">
+                        <ExternalLink /> Open
+                    </a>
+                </Button>
+                {verified && (
+                    <Button
+                        size="sm"
+                        variant={published ? 'ghost' : 'default'}
+                        onClick={() =>
+                            router.put(
+                                updateSchoolPage.url(),
+                                { published: !published },
+                                { preserveScroll: true },
+                            )
+                        }
+                    >
+                        {published ? 'Hide page' : 'Publish page'}
+                    </Button>
+                )}
+            </div>
+        </section>
+    );
+}

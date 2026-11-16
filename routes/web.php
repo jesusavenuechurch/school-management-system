@@ -14,6 +14,7 @@ use App\Http\Controllers\Setup\AcademicYearController;
 use App\Http\Controllers\Setup\ClassroomController;
 use App\Http\Controllers\Setup\ClassStructureController;
 use App\Http\Controllers\Setup\GradeLevelController;
+use App\Http\Controllers\Setup\SchoolPageController;
 use App\Http\Controllers\Setup\SetupJourneyController;
 use App\Http\Controllers\Setup\SubjectController;
 use App\Http\Controllers\Setup\TermController;
@@ -49,6 +50,8 @@ Route::middleware(['auth', 'school'])->group(function () {
 
     // School setup and people management: administrators only.
     Route::middleware('role:admin')->group(function () {
+        Route::put('school-page', [SchoolPageController::class, 'update'])->name('school-page.update');
+
         Route::prefix('setup')->name('setup.')->group(function () {
             // The guided setup journey with the chalkboard.
             Route::get('/', [SetupJourneyController::class, 'show'])->name('journey');

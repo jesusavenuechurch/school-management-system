@@ -46,6 +46,10 @@ class DashboardController extends Controller
                 'steps' => app(SetupJourneyController::class)->steps($school, $user->id),
             ];
             $props['verified'] = $school->isVerified();
+            $props['publicPage'] = [
+                'url' => route('schools.public', $school),
+                'published' => $school->isPublic(),
+            ];
         }
 
         $staff = Staff::where('user_id', $user->id)->first();
