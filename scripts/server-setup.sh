@@ -141,7 +141,8 @@ as_app "composer install --no-dev --optimize-autoloader --no-interaction"
 if [[ -z "$(env_get APP_KEY)" ]]; then
     as_app "php artisan key:generate --force"
 fi
-as_app "php artisan optimize:clear"
+# Not optimize:clear: on a fresh database the cache table does not exist yet.
+as_app "php artisan config:clear"
 as_app "php artisan migrate --force"
 as_app "php artisan storage:link" || true
 as_app "npm ci --no-audit --no-fund"
