@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Concerns\ScopesToSchool;
 use App\Http\Controllers\Setup\SetupJourneyController;
 use App\Models\AcademicYear;
+use App\Models\Application;
 use App\Models\Classroom;
 use App\Models\ClassSubjectTeacher;
 use App\Models\Guardian;
@@ -46,6 +47,7 @@ class DashboardController extends Controller
                 'steps' => app(SetupJourneyController::class)->steps($school, $user->id),
             ];
             $props['verified'] = $school->isVerified();
+            $props['pendingApplications'] = Application::where('status', 'pending')->count();
             $props['publicPage'] = [
                 'url' => route('schools.public', $school),
                 'published' => $school->isPublic(),

@@ -43,7 +43,8 @@ class ReportCardController extends Controller
             'selectedTermId' => $term?->id,
             'classrooms' => $classrooms->map(fn (Classroom $c) => ['value' => (string) $c->id, 'label' => $c->name])->values(),
             'selectedClassroomId' => $classroom?->id,
-            'exams' => $report?->examColumns() ?? [],
+            'counts' => $report?->counts() ?? ['tests' => 0, 'exams' => 0],
+            'testWeight' => $school->test_weight,
             'learners' => $report?->learners ?? [],
             'rankedCount' => $report?->rankedCount() ?? 0,
             'hasScale' => $report?->scale !== null,
@@ -85,7 +86,8 @@ class ReportCardController extends Controller
                 'name' => $classroom->name,
                 'class_teacher' => $classroom->classTeacher?->user?->name,
             ],
-            'exams' => $report->examColumns(),
+            'testWeight' => $school->test_weight,
+            'counts' => $report->counts(),
             'learners' => $learners,
             'rankedCount' => $report->rankedCount(),
             'scaleKey' => $report->scaleKey(),
@@ -155,7 +157,10 @@ class ReportCardController extends Controller
 
     public function settings(Request $request): RedirectResponse
     {
-        $data = $request->validate(['report_shows_position' => ['required', 'boolean']]);
+        $data = $request->validate([
+            'report_shows_position' => ['sometimes', 'boolean'],
+            'test_weight' => ['sometimes', 'integer', 'min:0', 'max:100'],
+        ]);
 
         School::findOrFail($this->schoolId())->update($data);
 

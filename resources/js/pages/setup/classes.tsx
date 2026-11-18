@@ -139,9 +139,10 @@ export default function Classes({
                 </Field>
                 <div className="grid gap-4 sm:grid-cols-2">
                     <Field
-                        label="Capacity"
+                        label="Learners it can take"
                         htmlFor="capacity"
                         error={e.capacity}
+                        hint="Used to show how full the class is when admitting."
                         optional
                     >
                         <Input

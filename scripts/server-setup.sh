@@ -79,6 +79,10 @@ env_set() {
 }
 
 env_set APP_ENV production
+# The platform's name, unless this server was given its own.
+case "$(env_get APP_NAME)" in
+    ""|Laravel|"School Management System") env_set APP_NAME Leseli ;;
+esac
 env_set APP_DEBUG false
 env_set INERTIA_SSR_ENABLED false
 env_set DB_CONNECTION mysql

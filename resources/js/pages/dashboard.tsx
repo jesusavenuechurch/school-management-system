@@ -1,5 +1,7 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
+    ChevronRight,
+    Inbox,
     ArrowRight,
     Check,
     Copy,
@@ -23,6 +25,7 @@ import { Button } from '@/components/ui/button';
 import { useClipboard } from '@/hooks/use-clipboard';
 import { cn } from '@/lib/utils';
 import { dashboard } from '@/routes';
+import { index as applicationsIndex } from '@/routes/applications';
 import { update as updateSchoolPage } from '@/routes/school-page';
 import { journey } from '@/routes/setup';
 import { show as showStudent } from '@/routes/students';
@@ -40,6 +43,7 @@ type Props = {
     setup?: { complete: boolean; steps: ChalkItem[] };
     verified?: boolean;
     publicPage?: { url: string; published: boolean };
+    pendingApplications?: number;
     myClasses?: {
         id: number;
         name: string;
@@ -93,6 +97,7 @@ export default function Dashboard({
     setup,
     verified,
     publicPage,
+    pendingApplications,
     myClasses,
     myChildren,
 }: Props) {
@@ -144,6 +149,30 @@ export default function Dashboard({
                             </div>
                         </div>
                     </section>
+                )}
+
+                {/* Admin: applications waiting for a decision */}
+                {isAdmin && (pendingApplications ?? 0) > 0 && (
+                    <Link
+                        href={applicationsIndex()}
+                        className="flex items-center gap-3 rounded-2xl border border-border bg-card px-5 py-4 transition hover:bg-muted/60"
+                    >
+                        <span className="flex size-10 items-center justify-center rounded-xl bg-sun-soft">
+                            <Inbox className="size-5" />
+                        </span>
+                        <span className="min-w-0 flex-1 text-sm">
+                            <span className="block font-semibold">
+                                {pendingApplications === 1
+                                    ? '1 application waiting'
+                                    : `${pendingApplications} applications waiting`}
+                            </span>
+                            <span className="text-muted-foreground">
+                                Parents applied from your school page. Accept or
+                                decline them.
+                            </span>
+                        </span>
+                        <ChevronRight className="size-4 text-muted-foreground" />
+                    </Link>
                 )}
 
                 {/* Admin: the school's public page */}

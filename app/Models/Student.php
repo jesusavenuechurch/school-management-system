@@ -148,4 +148,31 @@ class Student extends Model
     {
         return $this->hasMany(Invoice::class);
     }
+
+    /**
+     * One more than the highest number in use, keeping its prefix and
+     * padding ("MPS-0041" -> "MPS-0042"). The first learner gets e.g.
+     * "20270001".
+     */
+    public static function suggestAdmissionNumber(): string
+    {
+        $latest = static::withTrashed()->latest('id')->value('admission_number');
+
+        if ($latest === null || ! preg_match('/^(.*?)(\d+)$/', $latest, $m)) {
+            return now()->format('Y').'0001';
+        }
+
+        $prefix = $m[1];
+        $highest = static::withTrashed()
+            ->where('admission_number', 'like', $prefix.'%')
+            ->pluck('admission_number')
+            ->map(fn ($n) => preg_match('/^'.preg_quote($prefix, '/').'(\d+)$/', $n, $x) ? (int) $x[1] : 0)
+            ->max();
+
+        do {
+            $candidate = $prefix.str_pad((string) ++$highest, strlen($m[2]), '0', STR_PAD_LEFT);
+        } while (static::withTrashed()->where('admission_number', $candidate)->exists());
+
+        return $candidate;
+    }
 }

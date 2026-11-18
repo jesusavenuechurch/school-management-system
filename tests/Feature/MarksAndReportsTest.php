@@ -81,14 +81,19 @@ class MarksAndReportsTest extends TestCase
         return [$user, $staff];
     }
 
-    private function exam(string $name, int $weight = 100): Exam
+    private function exam(string $name, string $kind = 'test', ?Subject $subject = null): Exam
     {
-        return Exam::create([
+        $exam = Exam::create([
             'academic_year_id' => $this->term->academic_year_id,
             'term_id' => $this->term->id,
+            'grade_level_id' => $this->class->grade_level_id,
+            'subject_id' => $subject?->id,
             'name' => $name,
-            'weight' => $weight,
+            'kind' => $kind,
         ]);
+        $exam->classrooms()->sync([$this->class->id]);
+
+        return $exam;
     }
 
     public function test_preset_scales_put_each_grade_on_its_level(): void
@@ -167,20 +172,26 @@ class MarksAndReportsTest extends TestCase
     {
         [$user, $staff] = $this->teacher('Thabo Nthunya');
         ClassSubjectTeacher::create(['classroom_id' => $this->class->id, 'subject_id' => $this->maths->id, 'staff_id' => $staff->id]);
-        $test = $this->exam('Class test');
+        $test = $this->exam('Mid-term exam', 'exam');
+        $this->exam('English test', 'test', $this->english);
         [$lerato, $tumelo, $neo] = $this->learners;
 
+        // The English test isn't theirs; the exam shows only their maths sheet.
         $this->actingAs($user)
             ->get(route('marks.index'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('marks/index')
-                ->where('selectedExamId', $test->id)
-                ->has('groups', 1)
-                ->where('groups.0.classroom.name', 'Grade 8A')
-                ->where('groups.0.learners', 3)
-                ->has('groups.0.subjects', 1)
-                ->where('groups.0.subjects.0.filled', 0));
+                ->has('tests', 1)
+                ->where('tests.0.name', 'Mid-term exam')
+                ->where('tests.0.classes.0.name', 'Grade 8A')
+                ->where('tests.0.classes.0.learners', 3)
+                ->has('tests.0.classes.0.sheets', 1)
+                ->where('tests.0.classes.0.sheets.0.subject.name', 'Mathematics')
+                ->where('tests.0.classes.0.sheets.0.filled', 0)
+                ->where('tests.0.can_edit', false)
+                ->has('choices.grades', 1)
+                ->has('choices.subjects', 1));
 
         $this->get(route('marks.show', [$test, $this->class, $this->maths]))
             ->assertOk()
@@ -228,8 +239,8 @@ class MarksAndReportsTest extends TestCase
 
     public function test_the_report_combines_marks_by_weight_and_ranks_the_class(): void
     {
-        $test = $this->exam('Class test', 30);
-        $final = $this->exam('End of term exam', 70);
+        $test = $this->exam('Class test', 'test', $this->maths);
+        $final = $this->exam('End of term exam', 'exam');
         [$lerato, $tumelo, $neo] = $this->learners;
         $scale = $this->class->gradingScale();
 
@@ -238,6 +249,7 @@ class MarksAndReportsTest extends TestCase
                 ->applyGrade($scale)->save();
         };
 
+        // Tests count 30%, exams 70% (the default).
         // Lerato: maths 60*0.3 + 80*0.7 = 74, English 90 -> average 82.
         $mark($test, $lerato, $this->maths, 60);
         $mark($final, $lerato, $this->maths, 80);
@@ -253,11 +265,14 @@ class MarksAndReportsTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('reports/index')
                 ->where('selectedClassroomId', $this->class->id)
-                ->has('exams', 2)
+                ->where('counts', ['tests' => 1, 'exams' => 1])
+                ->where('testWeight', 30)
                 ->has('learners', 3)
                 ->where('learners.0.student.full_name', 'Tumelo Khoabane')
                 ->where('learners.1.student.full_name', 'Lerato Mokoena')
                 ->where('learners.1.subjects.1.name', 'Mathematics')
+                ->where('learners.1.subjects.1.tests', 60)
+                ->where('learners.1.subjects.1.exam', 80)
                 ->where('learners.1.subjects.1.mark', 74)
                 ->where('learners.1.subjects.1.symbol', 'B')
                 ->where('learners.1.average', 82)
@@ -277,6 +292,11 @@ class MarksAndReportsTest extends TestCase
                 ->where('learners.0.student.id', $lerato->id)
                 ->has('scaleKey', 9)
                 ->where('school.shows_position', true));
+
+        // With tests at 50%, Lerato's maths is 70.
+        $this->put(route('reports.settings'), ['test_weight' => 50])->assertSessionHasNoErrors();
+        $this->get(route('reports.index'))->assertInertia(fn (Assert $page) => $page
+            ->where('learners.1.subjects.1.mark', 70));
     }
 
     public function test_class_teachers_write_remarks_and_admins_issue_the_reports(): void
@@ -320,25 +340,101 @@ class MarksAndReportsTest extends TestCase
         $this->assertFalse($this->school->fresh()->report_shows_position);
     }
 
+    public function test_a_teacher_sets_a_test_for_the_classes_they_teach(): void
+    {
+        [$user, $staff] = $this->teacher('Thabo Nthunya');
+        ClassSubjectTeacher::create(['classroom_id' => $this->class->id, 'subject_id' => $this->maths->id, 'staff_id' => $staff->id]);
+        $other = Classroom::create(['grade_level_id' => $this->class->grade_level_id, 'academic_year_id' => $this->term->academic_year_id, 'name' => 'Grade 8B']);
+
+        $fields = fn (array $extra = []) => [
+            'term_id' => $this->term->id,
+            'kind' => 'exam', // ignored: teachers set tests
+            'grade_level_id' => $this->class->grade_level_id,
+            'subject_id' => $this->maths->id,
+            'name' => 'Test 1',
+            'max_score' => 40,
+            'classrooms' => [$this->class->id],
+            ...$extra,
+        ];
+
+        // Not a class they teach maths in.
+        $this->actingAs($user)->post(route('marks.tests.store'), $fields(['classrooms' => [$other->id]]))
+            ->assertSessionHasErrors('classrooms');
+        $this->post(route('marks.tests.store'), $fields(['subject_id' => $this->english->id]))
+            ->assertSessionHasErrors('classrooms');
+
+        $this->post(route('marks.tests.store'), $fields())->assertSessionHasNoErrors();
+        $this->post(route('marks.tests.store'), $fields())->assertSessionHasErrors('name');
+
+        $test = Exam::firstWhere('name', 'Test 1');
+        $this->assertSame('test', $test->kind);
+        $this->assertSame($staff->id, $test->created_by);
+        $this->assertSame([$this->class->id], $test->classrooms->pluck('id')->all());
+
+        // The sheet opens out of the test's total; other classes aren't on it.
+        $this->get(route('marks.show', [$test, $this->class, $this->maths]))
+            ->assertInertia(fn (Assert $page) => $page->where('outOf', 40));
+        $this->get(route('marks.show', [$test, $other, $this->maths]))->assertNotFound();
+        $this->get(route('marks.show', [$test, $this->class, $this->english]))->assertNotFound();
+
+        // Changing the total re-marks what was entered against it.
+        $this->put(route('marks.save', [$test, $this->class, $this->maths]), ['out_of' => 40, 'marks' => [$this->learners[0]->id => 30]]);
+        $this->assertSame('B', ExamResult::first()->grade_label); // 75%
+
+        $this->put(route('marks.tests.update', $test), $fields(['max_score' => 50]))->assertSessionHasNoErrors();
+        $result = ExamResult::first();
+        $this->assertEquals(50, $result->max_score);
+        $this->assertSame('C', $result->grade_label); // 60%
+    }
+
     public function test_tests_with_marks_cannot_be_removed(): void
     {
+        // An admin sets an exam for every subject and grade.
         $this->actingAs($this->admin)
-            ->post(route('exams.store'), ['term_id' => $this->term->id, 'name' => 'Class test', 'weight' => 40])
+            ->post(route('marks.tests.store'), [
+                'term_id' => $this->term->id,
+                'kind' => 'exam',
+                'name' => 'End of term exam',
+                'max_score' => 100,
+                'classrooms' => [$this->class->id],
+            ])
             ->assertSessionHasNoErrors();
 
-        $this->post(route('exams.store'), ['term_id' => $this->term->id, 'name' => 'Class test', 'weight' => 40])
-            ->assertSessionHasErrors('name');
-
-        $exam = Exam::firstWhere('name', 'Class test');
+        $exam = Exam::firstWhere('name', 'End of term exam');
         $this->assertSame($this->term->academic_year_id, $exam->academic_year_id);
+        $this->assertNull($exam->subject_id);
+        $this->assertNull($exam->grade_level_id);
 
         ExamResult::create(['exam_id' => $exam->id, 'student_id' => $this->learners[0]->id, 'subject_id' => $this->maths->id, 'score' => 5, 'max_score' => 10]);
 
-        $this->delete(route('exams.destroy', $exam))->assertSessionHasErrors('exam');
+        $this->delete(route('marks.tests.destroy', $exam))->assertSessionHasErrors('exam');
         $this->assertModelExists($exam);
 
-        $this->get(route('exams.index'))->assertOk()->assertInertia(fn (Assert $page) => $page
-            ->component('marks/exams')
-            ->where('terms.0.exams.0.results_count', 1));
+        // Another teacher can't change or remove it.
+        [$teacher] = $this->teacher('Not Theirs');
+        $this->actingAs($teacher)->delete(route('marks.tests.destroy', $exam))->assertForbidden();
+    }
+
+    public function test_last_years_tests_are_brought_forward_to_the_same_term(): void
+    {
+        $old = AcademicYear::create(['name' => '2026', 'start_date' => '2026-01-15', 'end_date' => '2026-11-30']);
+        $oldTerm = Term::create(['academic_year_id' => $old->id, 'name' => 'Term 1', 'start_date' => '2026-01-15', 'end_date' => '2026-04-10']);
+        $oldClass = Classroom::create(['grade_level_id' => $this->class->grade_level_id, 'academic_year_id' => $old->id, 'name' => 'Grade 8A']);
+        $previous = Exam::create(['academic_year_id' => $old->id, 'term_id' => $oldTerm->id, 'grade_level_id' => $this->class->grade_level_id, 'subject_id' => $this->maths->id, 'name' => 'Test 1', 'kind' => 'test', 'max_score' => 50, 'start_date' => '2026-02-10']);
+        $previous->classrooms()->sync([$oldClass->id]);
+
+        $this->actingAs($this->admin)
+            ->get(route('marks.index'))
+            ->assertInertia(fn (Assert $page) => $page->where('previousTerm', 'Term 1, 2026')->has('tests', 0));
+
+        $this->post(route('marks.tests.bringForward'), ['term_id' => $this->term->id])->assertSessionHasNoErrors();
+        $this->post(route('marks.tests.bringForward'), ['term_id' => $this->term->id]);
+
+        $copy = Exam::where('term_id', $this->term->id)->sole();
+        $this->assertSame('Test 1', $copy->name);
+        $this->assertSame($this->maths->id, $copy->subject_id);
+        $this->assertEquals(50, $copy->max_score);
+        $this->assertNull($copy->start_date);
+        $this->assertSame([$this->class->id], $copy->classrooms->pluck('id')->all());
     }
 }

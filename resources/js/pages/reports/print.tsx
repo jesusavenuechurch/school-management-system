@@ -1,7 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft, FileText, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import type { ReportExam, ReportLearner } from '@/pages/reports/index';
+import type { ReportCounts, ReportLearner } from '@/pages/reports/index';
 
 type Props = {
     school: {
@@ -14,7 +14,8 @@ type Props = {
     };
     term: { name: string; year: string | null };
     classroom: { name: string; class_teacher: string | null };
-    exams: ReportExam[];
+    testWeight: number;
+    counts: ReportCounts;
     learners: ReportLearner[];
     rankedCount: number;
     scaleKey: {
@@ -43,13 +44,32 @@ export default function PrintReports({
     school,
     term,
     classroom,
-    exams,
+    testWeight,
+    counts,
     learners,
     rankedCount,
     scaleKey,
     backUrl,
 }: Props) {
     const single = learners.length === 1;
+    const columns = [
+        ...(counts.tests > 0
+            ? [
+                  {
+                      key: 'tests' as const,
+                      label: counts.tests === 1 ? 'Test' : 'Tests',
+                  },
+              ]
+            : []),
+        ...(counts.exams > 0
+            ? [
+                  {
+                      key: 'exam' as const,
+                      label: counts.exams === 1 ? 'Exam' : 'Exams',
+                  },
+              ]
+            : []),
+    ];
     const title = single
         ? `Report: ${learners[0].student.full_name}`
         : `Reports: ${classroom.name}`;
@@ -177,12 +197,12 @@ export default function PrintReports({
                                         <th className="py-1.5 pr-2 font-semibold">
                                             Subject
                                         </th>
-                                        {exams.map((exam) => (
+                                        {columns.map((column) => (
                                             <th
-                                                key={exam.id}
+                                                key={column.key}
                                                 className="px-1.5 py-1.5 text-center font-semibold"
                                             >
-                                                {exam.name}
+                                                {column.label}
                                                 <span className="block font-normal normal-case">
                                                     %
                                                 </span>
@@ -218,12 +238,12 @@ export default function PrintReports({
                                                     </span>
                                                 )}
                                             </td>
-                                            {exams.map((exam) => (
+                                            {columns.map((column) => (
                                                 <td
-                                                    key={exam.id}
+                                                    key={column.key}
                                                     className="px-1.5 py-1.5 text-center tabular-nums"
                                                 >
-                                                    {pct(s.exams[exam.id])}
+                                                    {pct(s[column.key])}
                                                 </td>
                                             ))}
                                             <td className="px-1.5 py-1.5 text-center font-semibold tabular-nums">
@@ -242,7 +262,7 @@ export default function PrintReports({
                                     <tr className="border-b-2 border-[var(--idc-ink)]">
                                         <td
                                             className="py-2 pr-2 font-semibold"
-                                            colSpan={exams.length + 1}
+                                            colSpan={columns.length + 1}
                                         >
                                             Average
                                             <span className="ml-2 text-xs font-normal text-[var(--idc-muted)]">
@@ -294,13 +314,8 @@ export default function PrintReports({
                                                     `${b.label} ${b.min_percentage}%+${b.remark ? ` ${b.remark}` : ''}`,
                                             )
                                             .join(' · ')}
-                                        {exams.length > 1 &&
-                                            ` — The term mark combines ${exams
-                                                .map(
-                                                    (e) =>
-                                                        `${e.name} (${Math.round((e.weight / exams.reduce((t, x) => t + x.weight, 0)) * 100)}%)`,
-                                                )
-                                                .join(', ')}.`}
+                                        {columns.length > 1 &&
+                                            ` — Term mark: tests ${testWeight}%, exams ${100 - testWeight}%.`}
                                     </p>
                                 )}
                                 <p className="mt-2 flex justify-between text-[10px] text-[var(--idc-muted)]">

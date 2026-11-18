@@ -2,6 +2,8 @@ import { Form, Head, Link } from '@inertiajs/react';
 import { Plus, X } from 'lucide-react';
 import { useState } from 'react';
 import CheckboxField from '@/components/checkbox-field';
+import ClassPicker from '@/components/class-picker';
+import type { PlacementGrade } from '@/components/class-picker';
 import Field from '@/components/field';
 import NativeSelect from '@/components/native-select';
 import PhotoPicker from '@/components/photo-picker';
@@ -14,7 +16,7 @@ import { create, index, store } from '@/routes/students';
 import type { Option } from '@/types';
 
 type Props = {
-    classrooms: Option[];
+    placements: PlacementGrade[];
     genderOptions: Option[];
     relationshipOptions: Option[];
     nextAdmissionNumber: string;
@@ -45,7 +47,7 @@ function Section({
 }
 
 export default function CreateStudent({
-    classrooms,
+    placements,
     genderOptions,
     relationshipOptions,
     nextAdmissionNumber,
@@ -175,38 +177,24 @@ export default function CreateStudent({
                                             defaultValue={today}
                                         />
                                     </Field>
-                                    <Field
-                                        label="Class"
-                                        htmlFor="classroom_id"
-                                        error={e.classroom_id}
-                                        optional
-                                        className="sm:col-span-2"
-                                        hint={
-                                            classrooms.length === 0
-                                                ? undefined
-                                                : 'You can move them to another class later.'
-                                        }
-                                    >
-                                        {classrooms.length === 0 ? (
-                                            <p className="rounded-md border border-dashed border-border px-3 py-2 text-sm text-muted-foreground">
-                                                No classes yet.{' '}
-                                                <Link
-                                                    href={classes()}
-                                                    className="font-medium text-foreground underline"
-                                                >
-                                                    Add classes
-                                                </Link>{' '}
-                                                to place this student.
-                                            </p>
-                                        ) : (
-                                            <NativeSelect
-                                                id="classroom_id"
-                                                name="classroom_id"
-                                                options={classrooms}
-                                                placeholder="Place later"
-                                            />
-                                        )}
-                                    </Field>
+                                    {placements.length === 0 ? (
+                                        <p className="rounded-md border border-dashed border-border px-3 py-2 text-sm text-muted-foreground sm:col-span-2">
+                                            No classes yet.{' '}
+                                            <Link
+                                                href={classes()}
+                                                className="font-medium text-foreground underline"
+                                            >
+                                                Add classes
+                                            </Link>{' '}
+                                            to place this student.
+                                        </p>
+                                    ) : (
+                                        <ClassPicker
+                                            grades={placements}
+                                            error={e.classroom_id}
+                                            laterLabel="Place later"
+                                        />
+                                    )}
                                 </Section>
 
                                 <section className="grid gap-6 rounded-2xl border border-border bg-card p-5 sm:p-6 lg:grid-cols-[14rem_1fr]">

@@ -9,6 +9,7 @@ use App\Models\Exam;
 use App\Models\ExamResult;
 use App\Models\GradingScale;
 use App\Models\ReportCard;
+use App\Models\School;
 use App\Models\Student;
 use App\Models\StudentEnrollment;
 use App\Models\Subject;
@@ -18,8 +19,9 @@ use Illuminate\Support\Collection;
 /**
  * A class's results for one term, worked out from the marks entered:
  *
- *  - a subject's term mark is the weighted average of its test and exam
- *    percentages (equal weights = a plain average);
+ *  - a subject's term mark weighs the average of its tests against the
+ *    average of its exams (the school's test_weight, e.g. 30/70); with
+ *    only tests or only exams, that average is the term mark;
  *  - the learner's average is the mean of their subject term marks;
  *  - position ranks learners by that average, ties sharing a place.
  */
@@ -36,9 +38,13 @@ class TermReport
 
     public ?GradingScale $scale;
 
+    /** Share of the term mark from tests; exams get the rest. */
+    public int $testWeight;
+
     public function __construct(public Term $term, public Classroom $classroom)
     {
         $this->scale = $classroom->gradingScale();
+        $this->testWeight = (int) (School::whereKey($classroom->school_id)->value('test_weight') ?? 30);
         $this->build();
     }
 
@@ -69,6 +75,7 @@ class TermReport
     {
         $this->exams = Exam::query()
             ->where('term_id', $this->term->id)
+            ->whereHas('classrooms', fn ($q) => $q->whereKey($this->classroom->id))
             ->orderBy('start_date')
             ->orderBy('id')
             ->get();
@@ -100,7 +107,7 @@ class TermReport
             ->keyBy('student_id');
 
         $attendance = $this->attendance($students->pluck('id')->all());
-        $weights = $this->exams->pluck('weight', 'id');
+        $kinds = $this->exams->pluck('kind', 'id');
 
         foreach ($students as $student) {
             /** @var Collection<int, ExamResult> $mine */
@@ -109,22 +116,20 @@ class TermReport
             $marks = [];
 
             foreach ($this->subjects as $subject) {
-                $perExam = [];
-                $sum = 0.0;
-                $weightSum = 0;
+                $percentages = ['test' => [], 'exam' => []];
 
                 foreach ($mine->where('subject_id', $subject->id) as $result) {
-                    $percentage = $result->percentage;
-                    $perExam[$result->exam_id] = $percentage;
-
-                    if ($percentage !== null) {
-                        $weight = (int) $weights->get($result->exam_id, 100);
-                        $sum += $percentage * $weight;
-                        $weightSum += $weight;
+                    if ($result->percentage !== null) {
+                        $percentages[$kinds->get($result->exam_id) === 'exam' ? 'exam' : 'test'][] = $result->percentage;
                     }
                 }
 
-                $mark = $weightSum > 0 ? round($sum / $weightSum, 1) : null;
+                $tests = self::mean($percentages['test']);
+                $exams = self::mean($percentages['exam']);
+                $mark = match (true) {
+                    $tests !== null && $exams !== null => round(($tests * $this->testWeight + $exams * (100 - $this->testWeight)) / 100, 1),
+                    default => $tests ?? $exams,
+                };
                 $band = $mark !== null ? $this->scale?->bandFor($mark) : null;
 
                 if ($mark !== null) {
@@ -136,7 +141,9 @@ class TermReport
                     'name' => $subject->name,
                     'code' => $subject->code,
                     'teacher' => $assignments->get($subject->id)?->staff?->user?->name,
-                    'exams' => (object) $perExam,
+                    'tests' => $tests,
+                    'tests_count' => count($percentages['test']),
+                    'exam' => $exams,
                     'mark' => $mark,
                     'symbol' => $band?->label,
                     'remark' => $band?->remark,
@@ -220,15 +227,24 @@ class TermReport
     }
 
     /**
-     * @return list<array{id: int, name: string, weight: int}>
+     * @param  list<float>  $values
      */
-    public function examColumns(): array
+    private static function mean(array $values): ?float
     {
-        return $this->exams->map(fn (Exam $exam) => [
-            'id' => $exam->id,
-            'name' => $exam->name,
-            'weight' => $exam->weight,
-        ])->values()->all();
+        return $values === [] ? null : round(array_sum($values) / count($values), 1);
+    }
+
+    /**
+     * How many tests and exams the class wrote this term.
+     *
+     * @return array{tests: int, exams: int}
+     */
+    public function counts(): array
+    {
+        return [
+            'tests' => $this->exams->where('kind', '!=', 'exam')->count(),
+            'exams' => $this->exams->where('kind', 'exam')->count(),
+        ];
     }
 
     /**

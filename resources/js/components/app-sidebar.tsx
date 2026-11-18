@@ -1,9 +1,9 @@
 import { Link, usePage } from '@inertiajs/react';
 import {
+    Inbox,
     Award,
     BookMarked,
     CalendarRange,
-    ClipboardList,
     FileText,
     PenLine,
     LayoutGrid,
@@ -25,13 +25,13 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
-import { index as examsIndex } from '@/routes/exams';
 import { index as marksIndex } from '@/routes/marks';
 import { index as reportsIndex } from '@/routes/reports';
 import { index as scalesIndex } from '@/routes/scales';
 import { classes, journey } from '@/routes/setup';
 import { index as subjectsIndex } from '@/routes/setup/subjects';
 import { index as yearsIndex } from '@/routes/setup/years';
+import { index as applicationsIndex } from '@/routes/applications';
 import { index as staffIndex } from '@/routes/staff';
 import { index as studentsIndex } from '@/routes/students';
 import type { NavItem } from '@/types';
@@ -42,24 +42,47 @@ export function AppSidebar() {
     const isTeacher = auth.roles.includes('teacher');
 
     const mainNavItems: NavItem[] = [
-        { title: 'Dashboard', href: dashboard(), icon: LayoutGrid },
+        {
+            title: 'Dashboard',
+            href: dashboard(),
+            icon: LayoutGrid,
+            tone: 'text-primary',
+        },
         ...(isAdmin
             ? [
                   {
                       title: 'Students',
                       href: studentsIndex(),
                       icon: UsersRound,
+                      tone: 'text-sky',
                   },
-                  { title: 'Staff', href: staffIndex(), icon: UserRoundCog },
+                  {
+                      title: 'Applications',
+                      href: applicationsIndex(),
+                      icon: Inbox,
+                      tone: 'text-coral',
+                  },
+                  {
+                      title: 'Staff',
+                      href: staffIndex(),
+                      icon: UserRoundCog,
+                      tone: 'text-board',
+                  },
               ]
             : []),
         ...(isAdmin || isTeacher
             ? [
-                  { title: 'Marks', href: marksIndex(), icon: PenLine },
+                  {
+                      title: 'Marks',
+                      href: marksIndex(),
+                      icon: PenLine,
+                      tone: 'text-[color-mix(in_oklch,var(--sun)_65%,var(--ink))]',
+                  },
                   {
                       title: 'Report cards',
                       href: reportsIndex(),
                       icon: FileText,
+                      tone: 'text-leaf',
                   },
               ]
             : []),
@@ -76,7 +99,6 @@ export function AppSidebar() {
         },
         { title: 'Grades & classes', href: classes(), icon: School },
         { title: 'Subjects', href: subjectsIndex(), icon: BookMarked },
-        { title: 'Tests & exams', href: examsIndex(), icon: ClipboardList },
         { title: 'Marking scales', href: scalesIndex(), icon: Award },
     ];
 

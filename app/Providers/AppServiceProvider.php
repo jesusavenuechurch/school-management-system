@@ -54,12 +54,12 @@ class AppServiceProvider extends ServiceProvider
             app()->isProduction(),
         );
 
+        // Parents and teachers type these on a phone, so no forced capitals
+        // or symbols; length, a number and the leaked-password check matter more.
         Password::defaults(fn (): ?Password => app()->isProduction()
-            ? Password::min(12)
-                ->mixedCase()
+            ? Password::min(8)
                 ->letters()
                 ->numbers()
-                ->symbols()
                 ->uncompromised()
             : null,
         );

@@ -119,6 +119,20 @@ return [
         ],
     ],
 
+    // A test is set by a subject teacher for some of their classes; an exam
+    // is set by the school for whole grades. The term mark weighs the two
+    // kinds (schools.test_weight), however many of each a class wrote.
+    'assessment_kinds' => [
+        'test' => 'Test',
+        'exam' => 'Exam',
+    ],
+
+    'application_status' => [
+        'pending' => 'Waiting',
+        'accepted' => 'Accepted',
+        'declined' => 'Declined',
+    ],
+
     'school_status' => [
         'active' => 'Active',
         'suspended' => 'Suspended',
@@ -134,7 +148,6 @@ return [
     'gender' => [
         'male' => 'Male',
         'female' => 'Female',
-        'other' => 'Other',
     ],
 
     'employment_status' => [

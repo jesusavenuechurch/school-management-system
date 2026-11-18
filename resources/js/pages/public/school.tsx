@@ -1,10 +1,10 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { Mail, MapPin, Phone, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Mail, MapPin, Phone, ShieldCheck } from 'lucide-react';
 import AppLogoIcon from '@/components/app-logo-icon';
 import { EaselScene } from '@/components/illustrations';
 import { Button } from '@/components/ui/button';
 import { dashboard, home } from '@/routes';
-import { login as schoolLogin } from '@/routes/schools';
+import { apply, login as schoolLogin } from '@/routes/schools';
 
 type Props = {
     page: {
@@ -18,6 +18,7 @@ type Props = {
         email: string | null;
         address: string | null;
         country: string | null;
+        applications_open: boolean;
     };
 };
 
@@ -59,17 +60,36 @@ export default function PublicSchool({ page }: Props) {
                                 )}
                             </div>
                         </div>
-                        <Button asChild>
-                            {auth.user ? (
-                                <Link href={dashboard()}>
-                                    Open your account
-                                </Link>
-                            ) : (
-                                <Link href={schoolLogin(page.slug)}>
-                                    Parents and staff sign in
-                                </Link>
+                        <div className="flex shrink-0 items-center gap-2">
+                            {page.applications_open && (
+                                <Button
+                                    asChild
+                                    className="hidden bg-sun text-ink hover:bg-sun/85 sm:inline-flex"
+                                >
+                                    <Link href={apply(page.slug)}>
+                                        Apply for a place
+                                    </Link>
+                                </Button>
                             )}
-                        </Button>
+                            <Button
+                                asChild
+                                variant={
+                                    page.applications_open
+                                        ? 'outline'
+                                        : 'default'
+                                }
+                            >
+                                {auth.user ? (
+                                    <Link href={dashboard()}>
+                                        Open your account
+                                    </Link>
+                                ) : (
+                                    <Link href={schoolLogin(page.slug)}>
+                                        Sign in
+                                    </Link>
+                                )}
+                            </Button>
+                        </div>
                     </div>
                 </header>
 
@@ -135,17 +155,45 @@ export default function PublicSchool({ page }: Props) {
                                 </p>
                             </>
                         )}
-                        <Button size="lg" className="mt-8" asChild>
-                            {auth.user ? (
-                                <Link href={dashboard()}>
-                                    Open your account
-                                </Link>
-                            ) : (
-                                <Link href={schoolLogin(page.slug)}>
-                                    Sign in
-                                </Link>
+                        <div className="mt-8 flex flex-wrap gap-3">
+                            {page.applications_open && (
+                                <Button
+                                    size="lg"
+                                    asChild
+                                    className="bg-sun text-ink shadow-sm hover:bg-sun/85"
+                                >
+                                    <Link href={apply(page.slug)}>
+                                        Apply for a place
+                                        <ArrowRight />
+                                    </Link>
+                                </Button>
                             )}
-                        </Button>
+                            <Button
+                                size="lg"
+                                variant={
+                                    page.applications_open
+                                        ? 'outline'
+                                        : 'default'
+                                }
+                                asChild
+                            >
+                                {auth.user ? (
+                                    <Link href={dashboard()}>
+                                        Open your account
+                                    </Link>
+                                ) : (
+                                    <Link href={schoolLogin(page.slug)}>
+                                        Sign in
+                                    </Link>
+                                )}
+                            </Button>
+                        </div>
+                        {page.applications_open && (
+                            <p className="mt-3 text-sm text-muted-foreground">
+                                New to the school? Apply online and the school
+                                will reply on WhatsApp.
+                            </p>
+                        )}
                     </div>
                     <EaselScene
                         items={['Register', 'Homework', 'Reports']}

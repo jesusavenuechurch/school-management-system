@@ -36,6 +36,7 @@ class PublicSchoolController extends Controller
                 'email' => $public ? $school->email : null,
                 'address' => $public ? $school->address : null,
                 'country' => $public ? $school->country : null,
+                'applications_open' => PublicApplicationController::isOpen($school),
             ],
         ]);
     }
@@ -54,6 +55,7 @@ class PublicSchoolController extends Controller
                 'name' => $school->name,
                 'logo_url' => $school->logo_url,
                 'slug' => $school->slug,
+                'applications_open' => PublicApplicationController::isOpen($school),
             ],
         ]);
     }

@@ -10,6 +10,7 @@ use App\Models\Classroom;
 use App\Models\Guardian;
 use App\Models\Student;
 use App\Models\StudentEnrollment;
+use App\Support\ClassPlacements;
 use App\Support\Constants;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -66,10 +67,10 @@ class StudentController extends Controller
     public function create(): Response
     {
         return Inertia::render('students/create', [
-            'classrooms' => $this->currentClassroomOptions(),
+            'placements' => ClassPlacements::grades(),
             'genderOptions' => Constants::selectOptions('gender'),
             'relationshipOptions' => Constants::selectOptions('guardian_relationship'),
-            'nextAdmissionNumber' => sprintf('%s%04d', now()->format('Y'), (int) Student::withTrashed()->count() + 1),
+            'nextAdmissionNumber' => Student::suggestAdmissionNumber(),
         ]);
     }
 
@@ -165,7 +166,7 @@ class StudentController extends Controller
                     'status' => $enrollment->status,
                 ]),
             ],
-            'classrooms' => $this->currentClassroomOptions(),
+            'classrooms' => $this->currentClassroomOptions(withRoom: true),
             'genderOptions' => Constants::selectOptions('gender'),
             'statusOptions' => Constants::selectOptions('student_status'),
             'relationshipOptions' => Constants::selectOptions('guardian_relationship'),
@@ -293,7 +294,7 @@ class StudentController extends Controller
      *
      * @return list<array{value: string, label: string}>
      */
-    private function currentClassroomOptions(): array
+    private function currentClassroomOptions(bool $withRoom = false): array
     {
         $year = AcademicYear::query()->orderByDesc('is_current')->orderByDesc('start_date')->first();
 
@@ -306,8 +307,12 @@ class StudentController extends Controller
             ->join('grade_levels', 'grade_levels.id', '=', 'classrooms.grade_level_id')
             ->orderBy('grade_levels.sort_order')
             ->orderBy('classrooms.name')
-            ->get(['classrooms.id', 'classrooms.name'])
-            ->map(fn (Classroom $c) => ['value' => (string) $c->id, 'label' => $c->name])
+            ->withCount(['enrollments as learners' => fn ($q) => $q->whereNull('left_on')])
+            ->get(['classrooms.id', 'classrooms.name', 'classrooms.capacity'])
+            ->map(fn (Classroom $c) => [
+                'value' => (string) $c->id,
+                'label' => $withRoom ? ClassPlacements::label($c->name, (int) $c->learners, $c->capacity) : $c->name,
+            ])
             ->all());
     }
 }

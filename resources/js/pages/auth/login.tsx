@@ -1,4 +1,5 @@
-import { Form, Head } from '@inertiajs/react';
+import { Form, Head, Link } from '@inertiajs/react';
+import { ArrowRight } from 'lucide-react';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
 import TextLink from '@/components/text-link';
@@ -9,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { register } from '@/routes';
 import { store } from '@/routes/login';
+import { apply } from '@/routes/schools';
 import { request } from '@/routes/password';
 import PasskeyVerify from '@/components/passkey-verify';
 
@@ -16,7 +18,7 @@ type Props = {
     status?: string;
     canResetPassword: boolean;
     /** Set when signing in through a school's own page. */
-    brand?: { name: string; slug: string };
+    brand?: { name: string; slug: string; applications_open?: boolean };
 };
 
 export default function Login({ status, canResetPassword, brand }: Props) {
@@ -100,10 +102,33 @@ export default function Login({ status, canResetPassword, brand }: Props) {
                         {/* Parents and staff are added by their school, so a
                             school's own sign-in page doesn't offer sign-up. */}
                         {brand ? (
-                            <p className="text-center text-sm text-muted-foreground">
-                                No account yet? Your school adds parents and
-                                staff, then sends you a WhatsApp message.
-                            </p>
+                            <div className="grid gap-4">
+                                <p className="text-center text-sm text-muted-foreground">
+                                    No account yet? Your school adds parents and
+                                    staff, then sends you a WhatsApp message.
+                                </p>
+                                {brand.applications_open && (
+                                    <div className="rounded-2xl border-2 border-dashed border-sun bg-sun-soft/70 p-4 text-center">
+                                        <p className="font-display text-lg font-semibold">
+                                            New to {brand.name}?
+                                        </p>
+                                        <p className="mt-1 text-sm text-muted-foreground">
+                                            Apply for a place for your child
+                                            online.
+                                        </p>
+                                        <Button
+                                            asChild
+                                            variant="outline"
+                                            className="mt-3 w-full border-foreground/20 bg-card"
+                                        >
+                                            <Link href={apply(brand.slug)}>
+                                                Apply for a place
+                                                <ArrowRight />
+                                            </Link>
+                                        </Button>
+                                    </div>
+                                )}
+                            </div>
                         ) : (
                             <div className="text-center text-sm text-muted-foreground">
                                 Don't have an account?{' '}

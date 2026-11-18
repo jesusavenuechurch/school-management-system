@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admissions\ApplicationController;
 use App\Http\Controllers\Assessment\ExamController;
 use App\Http\Controllers\Assessment\MarkController;
 use App\Http\Controllers\Assessment\MarkingScaleController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\People\StaffInvitationController;
 use App\Http\Controllers\People\StudentCardController;
 use App\Http\Controllers\People\StudentController;
 use App\Http\Controllers\People\StudentGuardianController;
+use App\Http\Controllers\PublicApplicationController;
 use App\Http\Controllers\PublicSchoolController;
 use App\Http\Controllers\Setup\AcademicYearController;
 use App\Http\Controllers\Setup\ClassroomController;
@@ -29,6 +31,9 @@ Route::inertia('/', 'welcome')->name('home');
 
 // Each school's own page and branded sign-in.
 Route::get('s/{school:slug}', [PublicSchoolController::class, 'show'])->name('schools.public');
+Route::get('s/{school:slug}/apply', [PublicApplicationController::class, 'create'])->name('schools.apply');
+Route::post('s/{school:slug}/apply', [PublicApplicationController::class, 'store'])->middleware('throttle:6,1')->name('schools.apply.store');
+Route::get('s/{school:slug}/apply/thanks', [PublicApplicationController::class, 'thanks'])->name('schools.apply.thanks');
 Route::get('s/{school:slug}/login', [PublicSchoolController::class, 'login'])->middleware('guest')->name('schools.login');
 
 // Staff invitation links: the person registers themselves.
@@ -56,6 +61,10 @@ Route::middleware(['auth', 'school'])->group(function () {
     // Marks: teachers enter them for the subjects they teach.
     Route::middleware('role:admin|teacher')->group(function () {
         Route::get('marks', [MarkController::class, 'index'])->name('marks.index');
+        Route::post('marks/tests', [ExamController::class, 'store'])->name('marks.tests.store');
+        Route::post('marks/tests/bring-forward', [ExamController::class, 'bringForward'])->name('marks.tests.bringForward');
+        Route::put('marks/tests/{exam}', [ExamController::class, 'update'])->name('marks.tests.update');
+        Route::delete('marks/tests/{exam}', [ExamController::class, 'destroy'])->name('marks.tests.destroy');
         Route::get('marks/{exam}/{classroom}/{subject}', [MarkController::class, 'show'])->name('marks.show');
         Route::put('marks/{exam}/{classroom}/{subject}', [MarkController::class, 'save'])->name('marks.save');
 
@@ -71,11 +80,6 @@ Route::middleware(['auth', 'school'])->group(function () {
 
         Route::put('reports/{term}/{classroom}/publish', [ReportCardController::class, 'publish'])->name('reports.publish');
         Route::put('reports/settings', [ReportCardController::class, 'settings'])->name('reports.settings');
-
-        Route::get('exams', [ExamController::class, 'index'])->name('exams.index');
-        Route::post('exams', [ExamController::class, 'store'])->name('exams.store');
-        Route::put('exams/{exam}', [ExamController::class, 'update'])->name('exams.update');
-        Route::delete('exams/{exam}', [ExamController::class, 'destroy'])->name('exams.destroy');
 
         Route::get('marking-scales', [MarkingScaleController::class, 'index'])->name('scales.index');
         Route::post('marking-scales', [MarkingScaleController::class, 'store'])->name('scales.store');
@@ -124,6 +128,11 @@ Route::middleware(['auth', 'school'])->group(function () {
         Route::get('staff/invitations/template', [StaffInvitationController::class, 'template'])->name('staff.invitations.template');
         Route::post('staff/invitations/{invitation}/resend', [StaffInvitationController::class, 'resend'])->name('staff.invitations.resend');
         Route::delete('staff/invitations/{invitation}', [StaffInvitationController::class, 'destroy'])->name('staff.invitations.destroy');
+
+        Route::get('applications', [ApplicationController::class, 'index'])->name('applications.index');
+        Route::put('applications/settings', [ApplicationController::class, 'settings'])->name('applications.settings');
+        Route::put('applications/{application}/accept', [ApplicationController::class, 'accept'])->name('applications.accept');
+        Route::put('applications/{application}/decline', [ApplicationController::class, 'decline'])->name('applications.decline');
 
         Route::get('students', [StudentController::class, 'index'])->name('students.index');
         Route::get('students/cards', [StudentCardController::class, 'index'])->name('students.cards');

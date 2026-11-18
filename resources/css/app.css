@@ -100,23 +100,23 @@
     --secondary: oklch(0.958 0.018 85);
     --secondary-foreground: oklch(0.28 0.05 262);
     --muted: oklch(0.958 0.012 85);
-    --muted-foreground: oklch(0.5 0.03 262);
+    --muted-foreground: oklch(0.44 0.035 262);
     --accent: oklch(0.95 0.035 85);
     --accent-foreground: oklch(0.28 0.05 262);
     --destructive: oklch(0.577 0.2 27);
     --destructive-foreground: oklch(0.577 0.2 27);
-    --border: oklch(0.9 0.016 85);
-    --input: oklch(0.88 0.018 85);
+    --border: oklch(0.86 0.02 85);
+    --input: oklch(0.8 0.022 85);
     --ring: oklch(0.6 0.12 262);
 
-    --sun: oklch(0.84 0.15 82);
-    --sun-soft: oklch(0.955 0.055 88);
-    --coral: oklch(0.69 0.15 35);
-    --coral-soft: oklch(0.945 0.035 35);
-    --leaf: oklch(0.64 0.12 155);
-    --leaf-soft: oklch(0.948 0.035 155);
-    --sky: oklch(0.7 0.1 238);
-    --sky-soft: oklch(0.948 0.025 238);
+    --sun: oklch(0.8 0.16 78);
+    --sun-soft: oklch(0.94 0.07 88);
+    --coral: oklch(0.62 0.17 35);
+    --coral-soft: oklch(0.93 0.05 35);
+    --leaf: oklch(0.56 0.13 155);
+    --leaf-soft: oklch(0.93 0.05 155);
+    --sky: oklch(0.58 0.13 240);
+    --sky-soft: oklch(0.93 0.04 238);
 
     /* The chalkboard: our signature object. */
     --board: oklch(0.36 0.045 160);
@@ -136,7 +136,7 @@
     --sidebar-primary-foreground: oklch(0.985 0.01 85);
     --sidebar-accent: oklch(0.935 0.03 85);
     --sidebar-accent-foreground: oklch(0.25 0.04 262);
-    --sidebar-border: oklch(0.9 0.016 85);
+    --sidebar-border: oklch(0.86 0.02 85);
     --sidebar-ring: oklch(0.6 0.12 262);
 }
 

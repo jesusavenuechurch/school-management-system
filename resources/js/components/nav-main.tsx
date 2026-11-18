@@ -30,7 +30,9 @@ export function NavMain({
                             tooltip={{ children: item.title }}
                         >
                             <Link href={item.href} prefetch>
-                                {item.icon && <item.icon />}
+                                {item.icon && (
+                                    <item.icon className={item.tone} />
+                                )}
                                 <span>{item.title}</span>
                             </Link>
                         </SidebarMenuButton>

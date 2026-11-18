@@ -10,5 +10,7 @@ export type NavItem = {
     title: string;
     href: NonNullable<InertiaLinkProps['href']>;
     icon?: LucideIcon | null;
+    /** Tailwind text colour for the icon, e.g. "text-leaf". */
+    tone?: string;
     isActive?: boolean;
 };

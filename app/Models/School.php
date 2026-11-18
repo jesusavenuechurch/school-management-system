@@ -30,6 +30,8 @@ class School extends Model
             'published_at' => 'datetime',
             'setup_completed_at' => 'datetime',
             'report_shows_position' => 'boolean',
+            'test_weight' => 'integer',
+            'accepts_applications' => 'boolean',
         ];
     }
 

@@ -24,7 +24,9 @@ export type ReportSubject = {
     name: string;
     code: string;
     teacher: string | null;
-    exams: Record<string, number | null>;
+    tests: number | null;
+    tests_count: number;
+    exam: number | null;
     mark: number | null;
     symbol: string | null;
     remark: string | null;
@@ -50,14 +52,15 @@ export type ReportLearner = {
     head_teacher_remark: string | null;
     published_at: string | null;
 };
-export type ReportExam = { id: number; name: string; weight: number };
+export type ReportCounts = { tests: number; exams: number };
 
 type Props = {
     terms: Option[];
     selectedTermId: number | null;
     classrooms: Option[];
     selectedClassroomId: number | null;
-    exams: ReportExam[];
+    counts: ReportCounts;
+    testWeight: number;
     learners: ReportLearner[];
     rankedCount: number;
     hasScale: boolean;
@@ -74,7 +77,8 @@ export default function Reports({
     selectedTermId,
     classrooms,
     selectedClassroomId,
-    exams,
+    counts,
+    testWeight,
     learners,
     rankedCount,
     hasScale,
@@ -95,7 +99,7 @@ export default function Reports({
             <PageBody>
                 <PageHeader
                     title="Report cards"
-                    description="Each subject’s term mark combines its tests and exams by their weight. Add remarks, check the class, then print or issue the reports."
+                    description={`A subject’s term mark is its tests (${testWeight}%) and exams (${100 - testWeight}%). Add remarks, check the class, then print or issue the reports.`}
                     actions={
                         <>
                             {terms.length > 0 && (
@@ -173,12 +177,8 @@ export default function Reports({
                                     label="have remarks"
                                 />
                                 <Stat
-                                    value={String(exams.length)}
-                                    label={
-                                        exams.length === 1
-                                            ? 'test or exam'
-                                            : 'tests & exams'
-                                    }
+                                    value={`${counts.tests} + ${counts.exams}`}
+                                    label="tests + exams"
                                 />
                             </div>
                             <div className="flex flex-wrap items-center gap-2">
@@ -411,6 +411,37 @@ export default function Reports({
                                 />
                                 Show each learner’s position in class (
                                 {rankedCount} ranked)
+                            </label>
+                        )}
+                        {isAdmin && (
+                            <label className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                                Tests count
+                                <NativeSelect
+                                    aria-label="Share of the term mark from tests"
+                                    className="w-20"
+                                    value={String(testWeight)}
+                                    options={Array.from(
+                                        { length: 11 },
+                                        (_, i) => ({
+                                            value: String(i * 10),
+                                            label: `${i * 10}%`,
+                                        }),
+                                    )}
+                                    onChange={(e) =>
+                                        router.put(
+                                            settings.url(),
+                                            {
+                                                test_weight: Number(
+                                                    e.target.value,
+                                                ),
+                                            },
+                                            { preserveScroll: true },
+                                        )
+                                    }
+                                />
+                                of the term mark, exams {100 - testWeight}%.
+                                With only tests or only exams, those make up the
+                                whole mark.
                             </label>
                         )}
                     </>
