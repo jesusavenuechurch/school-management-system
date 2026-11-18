@@ -16,7 +16,8 @@
 #     user's password is set to the one in .env
 #   - PHP's upload limit is raised to 10 MB
 #
-# Safe to run again.
+# This is for the first install. To update the app later, use
+# scripts/deploy.sh, which leaves nginx and HTTPS alone.
 
 set -euo pipefail
 
@@ -77,6 +78,18 @@ env_set() {
         echo "$1=$2" >> "$APP_DIR/.env"
     fi
 }
+
+# Running this again with a different address would replace the HTTPS
+# site with a plain HTTP one. Updates go through deploy.sh instead.
+OLD_URL="$(env_get APP_URL || true)"
+OLD_HOST="${OLD_URL#*://}"
+OLD_HOST="${OLD_HOST%%/*}"
+if [[ "$OLD_URL" == https://* && "$OLD_HOST" != "$DOMAIN" && "${FORCE:-}" != 1 ]]; then
+    fail "this server already runs on $OLD_URL.
+  To update the app:         bash scripts/deploy.sh
+  To redo setup, same site:  sudo bash scripts/server-setup.sh $OLD_HOST
+  To really switch address:  sudo FORCE=1 bash scripts/server-setup.sh $DOMAIN"
+fi
 
 env_set APP_ENV production
 # The platform's name, unless this server was given its own.
